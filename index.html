@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!--
+
+-->
+<html>
+    <head>
+        <title>Steplists</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="icon"  href="img/favicon.ico" />
+        
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,300,400"> 
+        <link rel="stylesheet" href="css/style.css">
+
+    </head>
+    
+    <body>
+
+        <div class="col-lg-2"></div>
+        <div class="processes col-lg-8" id="processes">
+            
+            <div id="header">
+                <img src="img/header.png" alt="">
+                <div id="title">STEPLISTS</div>
+            </div>
+            
+            <div id="process-list">
+                <i>There are no processes. Create one below by defining its name and steps.</i>
+            </div>
+            
+            <hr>
+            
+            <div class="row">
+                
+                <div class="col-sm-4">
+                    <input id="process-name" class="form-control" placeholder="Process name (e.g. 'Requests')">
+                </div>
+                
+                <div class="col-sm-6">
+                    <input id="process-steps" class="form-control" placeholder="Process steps (e.g. 'Pending, Paid, In process, Done')">
+                </div>
+                
+                <div class="col-sm-2">
+                    <button id="btn-add-process" class="btn step-btn btn-block">Create</button>
+                </div>
+                
+            </div>
+            
+        </div>
+    
+        
+        <template id="process-template">
+            <div class="process">
+                <div class="process-header">
+                    <span class="process-name">P. name</span>
+                    <span class="pull-right btn-group">
+                        <a href="#" class="btn-delete-process">&Cross;</a>
+                    </span>
+                </div>
+                <div class="process-content">
+                    <div class="process-steps">
+                        <div class="process-bin">
+                            <i>Drag & Drop to delete</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    
+        <template id="step-template">
+            <div class="step">
+                <h4 class="step-btn step-name step-add"></h4>
+                <div class="step-elements">
+                </div>
+            </div>
+        </template>
+        
+        <template id="element-template">
+            <div class="element" >
+                <div class="element-handle">
+                    <div class="glyphicon glyphicon-move"></div>
+                </div>
+                <div class="element-info">
+                    <input class="element-name">
+                    <i class="element-date"></i>
+                </div>
+            </div>
+        </template>
+    
+        
+        <!--scripts-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+        <script src="https://gitcdn.xyz/repo/andres-ml/myjson-save/master/dist/mjs.js"></script>
+        <script src="js/sortable.js"></script>
+        
+        <script>
+            
+            (function() {
+                
+                var data = {
+                    processes: [],
+                    current: null,
+                };
+                
+                $('#btn-add-process').on('click', function(evt) {
+                    var name    = $('#process-name').val();
+                    var steps   = $('#process-steps').val().split(',').map(function(stepName) { return stepName.trim(); });
+                    
+                    addProcess(name, steps);
+                    focus(data.processes.length - 1);
+                });
+                
+                function addProcess(name, steps) {
+                    data.processes.push({
+                        name: name,
+                        steps: steps,
+                        elements: Array(steps.length).fill().map(function() { return []; }),
+                    });
+                    update();
+                }
+                
+                function update(redraw) {
+                    MJS.save();
+                    if (redraw !== false) {
+                        drawProcesses();
+                    }
+                }
+                
+                function getIndexes(element) {
+                    var $process = $(element).closest('.process');
+                    var $step    = $(element).closest('.step');
+                    var $element = $(element).closest('.element');
+                    
+                    return {
+                        process : $('.process').index( $process ),
+                        step    : $process.find('.step').index( $step ),
+                        element : $step.find('.element').index( $element ),
+                    };
+                }
+
+                function onElementMoved(event) {
+                    var $stepFrom = $(event.from).closest('.step');
+                    var $stepTo   = $(event.to).closest('.step');
+                    
+                    var $process  = $stepFrom.closest('.process');
+                    
+                    var processIndex = $('.process').index( $process );
+                    var fromIndex = $process.find('.step').index( $stepFrom );
+                    var toIndex   = $process.find('.step').index( $stepTo );
+                    
+                    var oldElementIndex = $(event.item).data('index');
+                    var newElementIndex = $(event.item).index();
+                    
+                    moveProcess(processIndex, fromIndex, toIndex, oldElementIndex, newElementIndex);
+                }
+                
+                function onElementSorted(event) {
+                    var indexes = getIndexes(event.item);
+                    var elements = data.processes[indexes.process].elements[indexes.step];
+                    
+                    var sorted = elements.splice(event.oldIndex, 1)[0]; // remove element and hold it
+                    elements.splice(event.newIndex, 0, sorted);         // reinsert element in new index
+                    
+                    update();
+                }
+                
+                function moveProcess(processIndex, fromStepIndex, toStepIndex, fromElementIndex, toElementIndex) {
+                    var elements    = data.processes[processIndex].elements[fromStepIndex];
+                    var element     = elements.splice(fromElementIndex, 1)[0];
+                    
+                    if (toStepIndex !== -1) {
+                        data.processes[processIndex].elements[toStepIndex].splice(toElementIndex, 0, element);
+                    }
+                    
+                    update();
+                }
+
+                function drawProcesses() {
+                    $('#process-list').empty();
+                    data.processes.forEach(function(process, processIndex) {
+                        var $process = $( $('#process-template').html() );
+                        $process.find('.process-name').text(process.name);
+                        
+                        $process.find('.process-content').toggle(processIndex === data.current);
+                            
+                        process.steps.forEach(function(step) {
+                            var $step = $( $('#step-template').html() );
+                            $step.find('.step-name').text(step);
+                            $process.find('.process-bin').before($step);
+                        
+                            Sortable.create($step.find('.step-elements')[0], {
+                                group: process.name,
+                                handle: '.element-handle',
+                                draggable: '.element',
+                                animation: 100,
+                                onAdd: onElementMoved,
+                                onUpdate: onElementSorted,
+                            });
+                            
+                        });
+                        
+                        process.elements.forEach(function(stepElements, stepIndex) {
+                            stepElements.forEach(function(element, elementIndex) {
+                                var $element = $( $('#element-template').html() );
+                                $element.find('.element-name').val( element.name );
+                                $element.find('.element-date').text( moment(element.date).format('DD/MM HH:mm') );
+                                $element.data('index', elementIndex);
+                                $element.appendTo($process.find('.step-elements').eq(stepIndex));
+                            });
+                        });
+                        
+                        Sortable.create($process.find('.process-bin')[0], {
+                            group: process.name,
+                            onAdd: onElementMoved,
+                        });
+                        
+                        $('#process-list').append( $process );
+                    });
+                    
+                    focus(data.current);
+                }
+                
+                
+                $(document.body).on('click', '.process-header', function() {
+                    var $processSteps = $(this).closest('.process').find('.process-steps');
+                    
+                    var index = $processSteps.is(':visible') ? null : $('.process-header').index(this);
+
+                    focus(index);
+                });
+                
+                function focus(index) {
+                    $('.process').each(function(processIndex) {
+                        var active = processIndex === index;
+                        if (active) {
+                            $(this).addClass('active');
+                            $(this).find('.process-content').slideDown(100);
+                        }
+                        else {
+                            $(this).removeClass('active');
+                            $(this).find('.process-content').slideUp(100);
+                        }
+                    });
+                    
+                    data.current = index;
+                }
+                
+                $(document.body).on('click', '.step-add', function() {
+                    var processIndex    = $(this).closest('.process').index('.process');
+                    var stepIndex       = $(this).closest('.process').find('.step').index( $(this).closest('.step') );
+                    
+                    var element = { name: '', date: new Date() };
+                    data.processes[processIndex].elements[stepIndex].push(element);
+                    
+                    update();
+                    
+                    // focus new element input
+                    $('.process').eq(processIndex).find('.step').eq(stepIndex).find('input').last().focus();
+                });
+                
+                
+                $(document.body).on('change', '.element-name', function() {
+                    var processIndex    = $(this).closest('.process').index('.process');
+                    var stepIndex       = $(this).closest('.process').find('.step').index( $(this).closest('.step') );
+                    var elementIndex    = $(this).closest('.step').find('.element').index( $(this).closest('.element') );
+                    
+                    data.processes[processIndex].elements[stepIndex][elementIndex].name = $(this).val();
+                    
+                    update(false);  // no need to redraw
+                });
+                
+                
+                function deleteProcess(index) {
+                    data.processes.splice(index, 1);
+                    update();
+                }
+            
+                $(document.body).on('click', '.btn-delete-process', function(evt) {
+                    var index = $(this).index('.btn-delete-process');
+                    
+                    if (index === data.current) {
+                        data.current = null;
+                    }
+                    else if (index < data.current) {
+                        data.current = (data.current > 0) ? data.current - 1 : null;
+                    }
+                    
+                    deleteProcess(index);
+                    
+                    evt.stopPropagation();
+                });
+            
+                $(document.body).on('load.mjs', function(evt) {
+                    if (data.processes.length > 0) {
+                        drawProcesses();
+                    }
+                });
+                
+                $(function() {
+                    MJS.init(data);
+                });
+                
+            })();
+            
+            
+            
+            
+            
+            /* ********************** */
+            
+            
+            $.fn.toggleSlide = function(speed) {
+                $(this).each(function() {
+                    if ($(this).is(':visible')) {
+                        $(this).slideUp(speed);
+                    }
+                    else {
+                        $(this).slideDown(speed);
+                    }
+                });
+            };
+            
+            $(document.body).on('click', '[data-toggle="collapse-sibling"]', function(evt) {
+                var parent = $(this).data('parent');
+                var target = $(this).data('target');
+                var $target = $(this).closest(parent).find(target);
+                
+                var speed = $(this).data('speed');
+                if (typeof speed === 'undefined') {
+                    speed = 200;
+                }
+                var timeout = $(this).data('timeout');
+                if (typeof timeout === 'undefined') {
+                    timeout = 3000;
+                }
+                
+                $target.show(speed);
+                setTimeout(function() { $target.hide(speed); }, timeout);
+            });
+            
+        </script>
+        
+    </body>
+</html>

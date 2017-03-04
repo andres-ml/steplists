@@ -1,0 +1,187 @@
+
+body {
+    padding-top: 10px;
+}
+
+#header {
+    margin-bottom: 10px;
+}
+
+#header img {
+    margin: auto;
+    display: block;
+}
+
+input {
+    box-shadow: none !important;
+}
+
+#title {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 100;
+    font-size: 30px;
+    text-align: center;
+    color: #758e97;
+    border-top: 1px solid #BACBD0;
+    width: 150px;
+    margin: 10px auto 0 auto;
+    padding-top: 0px;
+}
+
+#mjs-wrapper .input-wrap input {
+    margin: 10px;
+    padding: 0px;
+}
+.processes {
+    padding: 10px;
+}
+
+.process-content {
+    display: none;
+    background: #e9edf3;
+    padding: 5px;
+}
+
+.process-steps {
+    display: flex;
+    flex-direction: row;
+    border-radius: 0 0 4px 4px;
+}
+
+
+.process {
+    margin-bottom: 10px;
+}
+
+.process-list {
+    margin-bottom: 50px;
+}
+
+.process-name {
+    font-size: 20px;
+}
+
+.process-header {
+    padding: 5px;
+    color: white;
+    background: #858e9c;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.process-bin {
+    text-align: center;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 4px;
+    background-color: rgb(228, 221, 225);
+    color: #c5adad;
+    flex: 0 1;
+    display: flex;
+    justify-content:center;
+    align-content:center;
+    flex-direction:column; /* column | row */
+}
+
+.process.active .process-header {
+    border-radius: 4px 4px 0 0;
+}
+
+.process-header button {
+    font-size: 12px;
+    padding: 2px 15px;
+    border: none;
+}
+
+
+.step {
+    flex: 1;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.step-name {
+    text-align: center;
+    margin: 0 0 15px 0;
+}
+
+.step-add {
+    cursor: pointer;
+    height: 50px;
+    line-height: 50px;
+}
+
+.step-btn {
+    background: #9ca8b4;
+    color: white;
+    border-radius: 4px;
+    border: none;
+}
+
+.step-btn:hover {
+    background: #afbbc9;
+    color: white;
+    text-shadow: none;
+}
+.step-elements {
+    padding: 10px;
+    background: #e0e5ea;
+    min-height: 200px;
+    flex: 1;
+}
+
+.element {
+    background: white;
+    margin-bottom: 10px;
+    display: flex;
+}
+
+.element input {
+    background: #fff;
+    border: none;
+    border-bottom: 1px solid transparent;
+    text-align: left;
+    color: #4a545c;
+}
+
+.element-info input:hover, .element-info input:focus {
+    border-bottom: 1px solid silver;
+}
+
+.element-info {
+    padding: 0px 5px 0 5px;
+    flex: 9;
+}
+
+.element-handle {
+    background: #f1f3f8;
+    display: flex;
+    cursor: grab;
+    flex: 1;
+}
+
+.element-handle .glyphicon {
+    margin: auto;
+    color: #748c98;
+}
+
+.element-date {
+    text-align: right;
+    font-size: 12px;
+    color: gray;
+    display: block;
+}
+
+.element-name {
+    outline: none;
+    text-align: center;
+    width: 100%;
+    padding-top: 15px;
+}
+
+.btn-delete-process {
+    color: #415668;
+}
+
